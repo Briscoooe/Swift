@@ -4,26 +4,27 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.Serialization.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 
 namespace Swift
 {
-    public class HttpHandler : IHttpHandler
+    public class RequestSender : IRequestSender
     {
         private readonly HttpClient _client;
         private readonly string _apiUrl;
         private DataContractJsonSerializer _serializer;
 
-        public HttpHandler(HttpClient client, string apiUrl) 
+        public RequestSender(IOptions<AppSettings> config) 
         {
-            _client = client;
-            _apiUrl = apiUrl;
+            _client = new HttpClient();
+            _apiUrl = config.Value.ApiUrl;
         }
 
         public async Task<List<T>> GetObjects<T>(string endpoint)
         {
             _serializer = new DataContractJsonSerializer(typeof(List<T>));
             
-            var json = _client.GetStreamAsync(string.Format("{0}{1}", _apiUrl, endpoint));
+            var json = _client.GetStreamAsync(string.Format(_apiUrl, endpoint));
             var objects = _serializer.ReadObject(await json) as List<T>;
             return objects;
         }

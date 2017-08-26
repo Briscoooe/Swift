@@ -6,13 +6,13 @@ namespace Swift
     [DataContract]
     public class Package
     {
-        [DataMember(Name="packageId", IsRequired = true)]
+        [DataMember(Name="packageId")]
         public int Id { get; set; }
         
-        [DataMember(Name="destination", IsRequired = false)]
+        [DataMember(Name="destination")]
         public Coordinate Destination { get; set; }
 
-        [DataMember(Name="deadline", IsRequired = false)]
+        [DataMember(Name="deadline")]
         public double Deadline { get; set; }
     }
 }

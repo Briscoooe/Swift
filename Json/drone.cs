@@ -6,13 +6,13 @@ namespace Swift
     [DataContract]   
     public class Drone
     {
-        [DataMember(Name="droneId", IsRequired = true)]
+        [DataMember(Name="droneId")]
         public long Id { get; set; }
 
-        [DataMember(Name="location", IsRequired = false)]
+        [DataMember(Name="location")]
         public Coordinate Location { get; set; }
 
-        [DataMember(Name="packages", IsRequired = true)]
+        [DataMember(Name="packages")]
         public Package[] Package { get; set; }
     }
 }
