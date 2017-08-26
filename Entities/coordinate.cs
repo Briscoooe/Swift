@@ -7,9 +7,9 @@ namespace Swift
     public class Coordinate
     {
         [DataMember(Name="latitude")]
-        public string Latitude { get; set; }
+        public double Latitude { get; set; }
 
         [DataMember(Name="longitude")]
-        public string Longitude { get; set; }
+        public double Longitude { get; set; }
     }
 }

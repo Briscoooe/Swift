@@ -40,6 +40,7 @@ namespace Swift
             serviceCollection.AddOptions();
             serviceCollection.Configure<AppSettings>(configuration.GetSection("configuration"));
 
+            serviceCollection.AddTransient<IJourneyCalculator, JourneyCalculator>();
             serviceCollection.AddTransient<IRequestSender, RequestSender>();
             serviceCollection.AddTransient<IDeliveryService, DeliveryService>();
             serviceCollection.AddTransient<App>();
