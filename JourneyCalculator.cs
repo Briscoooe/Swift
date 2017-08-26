@@ -5,7 +5,8 @@ namespace Swift
 {
     public interface IJourneyCalculator 
     {
-        double CalculateJourneyTime(double droneLat, double droneLong, double packageLat, double packageLong);
+        double CalculateTimeFromDepot(double lat, double lng);
+        double CalculateTimeBetweenPoints(double startLat, double startLng, double endLat, double endLong);
     }
     public class JourneyCalculator : IJourneyCalculator
     {
@@ -19,20 +20,16 @@ namespace Swift
             _depotLong = config.Value.DepotLocation.Longitude;
         }
 
-        public double CalculateJourneyTime(double droneLat, double droneLong, double packageLat, double packageLong)
+        public double CalculateTimeFromDepot(double lat, double lng)
         {
-            var timeToDepot = CalculateTimeBetweenPoints(droneLat, droneLong);
-            var timeToDestination = CalculateTimeBetweenPoints(packageLat, packageLong);
-
-            return timeToDepot + timeToDestination;
+            return CalculateTimeBetweenPoints(lat, lng, _depotLat, _depotLong);
         }
-
-        private double CalculateTimeBetweenPoints(double lat1, double long1)
+        public double CalculateTimeBetweenPoints(double startLat, double startLng, double endLat, double endLong)
         {
             var pi = Math.PI;
-            var baseRad = pi * lat1 / 180;
+            var baseRad = pi * startLat / 180;
             var targetRad = pi * _depotLat/ 180;
-            var theta = long1 - _depotLong;
+            var theta = startLng - _depotLong;
             var thetaRad = pi * theta / 180;
 
             double dist =
