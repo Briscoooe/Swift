@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using Microsoft.Extensions.Options;
 
 namespace Swift 
@@ -15,74 +17,78 @@ namespace Swift
             _journeyCalculator = journeyCalculator;
         }
 
-        public void Start()
+        public void AssignDrones()
         {
-            var packages = _requestSender.GetObjects<Package>("packages").Result;
-            var drones = _requestSender.GetObjects<Drone>("drones").Result;            
-            var now = DateTimeOffset.Now.ToUnixTimeSeconds();
+            // Retrieve the packages, sorted by total time remaining (deadline minus time to deliver)
+            var packages = _requestSender.GetObjects<Package>("packages").Result
+                .OrderBy(p => p.Deadline - _journeyCalculator.CalculateTimeFromDepot(p.Destination));
 
-            var output = new Output();
+            // Retrieve the drones, sorting by the shortest trip back to the depot (including their current delivery)
+            var drones = _requestSender.GetObjects<Drone>("drones").Result
+                .OrderBy(d => _journeyCalculator.CalculateTimeToCompleteDelivery(
+                    d.Location, d.Package.Length > 0 ? d.Package[0].Destination : d.Location
+                ));
+
             var assignments = new List<Assignment>();
             var unassigned = new List<long>();
+            var now = DateTimeOffset.Now.ToUnixTimeSeconds();                                        
             foreach(var package in packages)
             {
-                var assignment = new Assignment();
-                assignment.PackageId = package.Id;
-                var depotToDestination = _journeyCalculator.CalculateTimeFromDepot( 
-                    package.Destination.Latitude,
-                    package.Destination.Longitude);
-                
-                var timeToDeadline = package.Deadline - now;
-                double shortestDeliveryTime  = long.MaxValue;
-                foreach(var drone in drones)
+                var depotToPackageTime = _journeyCalculator.CalculateTimeFromDepot(package.Destination);
+                // Iterate over drones that have not already been assigned
+                foreach(var drone in drones.Where(d => !assignments.Any(a => a.DroneId == d.Id)))
                 {
-                    double timeBeforeDeliveryStart = 0;
-                    // If it is doing a delivery
-                    if(drone.Package.Length > 0)
-                    {
-                        // Add the time taken to perform the delivery
-                        timeBeforeDeliveryStart += _journeyCalculator.CalculateTimeBetweenPoints(
-                            drone.Location.Latitude,
-                            drone.Location.Longitude,
-                            package.Destination.Latitude,
-                            package.Destination.Longitude
-                        );
-                        // Add the time taken to return from the destination to the depot
-                        timeBeforeDeliveryStart += _journeyCalculator.CalculateTimeFromDepot(
-                            package.Destination.Latitude,
-                            package.Destination.Longitude
-                        );
+                    var droneToDepotTime = GetDroneToDepotTime(drone);
+                    var totalTime = droneToDepotTime + depotToPackageTime;
+                    // As the drones are sorted by the quickest return journey to the depot
+                    // If the first one in the sorted list cannot make the delivery on time, none of them can
+                    // Thus its added to the "unassigned" list
+                    if(package.Deadline - totalTime  > now)
+                    {   
+                        unassigned.Add(package.Id);
                     }
-                    else 
+                    // Otherwise, the assignment is created 
+                    else
                     {
-                        // Add the time taken to return from its current location to the depot
-                        timeBeforeDeliveryStart += _journeyCalculator.CalculateTimeFromDepot(
-                            drone.Location.Latitude,
-                            drone.Location.Longitude
-                        );
+                        assignments.Add(new Assignment()
+                        {
+                            PackageId = package.Id,
+                            DroneId = drone.Id
+                        });
                     }
-                    var totalTimeForJourney = timeBeforeDeliveryStart + depotToDestination;
-                    // If the drone will make it on time AND it will take less time than the current shortest time
-                    if(totalTimeForJourney < timeToDeadline && shortestDeliveryTime > totalTimeForJourney)
-                    {
-                        shortestDeliveryTime = totalTimeForJourney;
-                        assignment.DroneId = drone.Id;
-                    }
-                }
-                if(assignment.DroneId == 0)
-                {
-                    unassigned.Add(package.Id);
-                }
-                else 
-                {
-                    assignments.Add(assignment);
+                    break;
                 }
             }
+            PrintOutput(assignments, unassigned);
         }
 
-        public void Stop()
+        private double GetDroneToDepotTime(Drone drone)
         {
-            
+            double droneToDepotTime = 0;
+            if(drone.Package.Length == 0)
+            {
+                droneToDepotTime += _journeyCalculator.CalculateTimeFromDepot(drone.Location);
+            }
+            else
+            {
+                droneToDepotTime += _journeyCalculator.CalculateTimeToCompleteDelivery(
+                    drone.Location, drone.Package[0].Destination);
+            }
+            return droneToDepotTime;
+        }
+
+        private void PrintOutput(List<Assignment> assignments, List<long> unassignedPackagesIds)
+        {
+            System.Console.WriteLine("Assignments:");
+            foreach(var assignment in assignments)
+            {
+                System.Console.WriteLine("[droneId: {0}, packageId: {1}]", assignment.DroneId, assignment.PackageId);
+            }
+            System.Console.WriteLine("unassigned:");            
+            foreach(var id in unassignedPackagesIds)
+            {
+                System.Console.Write(id);
+            }
         }
     }
 }

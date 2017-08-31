@@ -5,31 +5,38 @@ namespace Swift
 {
     public interface IJourneyCalculator 
     {
-        double CalculateTimeFromDepot(double lat, double lng);
-        double CalculateTimeBetweenPoints(double startLat, double startLng, double endLat, double endLong);
+        double CalculateTimeFromDepot(Coordinate position);
+        double CalculateTimeToCompleteDelivery(Coordinate position1, Coordinate position2);
     }
     public class JourneyCalculator : IJourneyCalculator
     {
-        private readonly double _depotLat;
-        private readonly double _depotLong;
+        private readonly Coordinate _depotLocation;
         private const int _droneSpeed = 50;
         
         public JourneyCalculator(IOptions<AppSettings> config)
         {
-            _depotLat = config.Value.DepotLocation.Latitude;
-            _depotLong = config.Value.DepotLocation.Longitude;
+            _depotLocation = config.Value.DepotLocation;
         }
 
-        public double CalculateTimeFromDepot(double lat, double lng)
+        public double CalculateTimeFromDepot(Coordinate position)
         {
-            return CalculateTimeBetweenPoints(lat, lng, _depotLat, _depotLong);
+            return CalculateTimeBetweenPoints(position, _depotLocation);
         }
-        public double CalculateTimeBetweenPoints(double startLat, double startLng, double endLat, double endLong)
+
+        public double CalculateTimeToCompleteDelivery(Coordinate position1, Coordinate position2)
+        {
+            var timeToDestination = CalculateTimeBetweenPoints( position1, position2);
+            var timeToDepot = CalculateTimeFromDepot(position2);
+
+            return timeToDestination + timeToDepot;
+        }
+        
+        private double CalculateTimeBetweenPoints(Coordinate position1, Coordinate position2)
         {
             var pi = Math.PI;
-            var baseRad = pi * startLat / 180;
-            var targetRad = pi * _depotLat/ 180;
-            var theta = startLng - _depotLong;
+            var baseRad = pi * position1.Latitude / 180;
+            var targetRad = pi * position2.Latitude / 180;
+            var theta = position1.Longitude - position2.Longitude;
             var thetaRad = pi * theta / 180;
 
             double dist =

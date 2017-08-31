@@ -11,7 +11,7 @@ namespace Swift
 
         public void Run()
         {
-            _deliveryService.Start();
+            _deliveryService.AssignDrones();
         }
     }
 }

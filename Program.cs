@@ -14,15 +14,6 @@ namespace Swift
     {
         static void Main(string[] args)
         {
-            // if(args.Length == 0)
-            // {
-            //     throw new ArgumentException("Not enough arguments");
-            // }
-            // else if(args.Length > 1) 
-            // {
-            //     throw new ArgumentException("Too many arguments");
-            // }
-
             var serviceCollection = new ServiceCollection();
             ConfigureServices(serviceCollection);
 
