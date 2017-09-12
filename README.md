@@ -4,7 +4,7 @@ This is my implementation of [the code test by GetSwift](https://github.com/GetS
 The test is centered around two endpoints of an API: A list of delivery drones and a list of packages to be delivered. The task is to take input from the two lists assign a drone to deliver each package to its destination by its deadline.
 
 # How did you implement your solution and why do it this way?
-For this test, I created a console application adopting a service-based approach using C# and the .NET Core framework. No third party tools, packages or frameworks were used. In doing this, I am ensuring portability and compatibility of the service across all platforms (Windows,MacOS, Linux). Installing and running the service is a matter of cloning the repo then running [code]dotnet restore[/code],[code]dotnet build[/code],[code]dotnet run[/code].
+For this test, I created a console application adopting a service-based approach using C# and the .NET Core framework. No third party tools, packages or frameworks were used. In doing this, I am ensuring portability and compatibility of the service across all platforms (Windows,MacOS, Linux). Installing and running the service is a matter of cloning the repo then running ```dotnet restore```,```dotnet build```,```dotnet run```.
 
 The entry point point to the application [Program.cs](https://github.com/Briscoooe/Swift/Program.cs), is where all of the application's dependencies are registered and resolved using an IoC (Inversion of Control) container. Using an IoC container makes the code easily maintainable as it enables you to freely alter the dependencies of a class and only need to change it in one place. Furthermore, using dependency injection makes each component loosely coupled and easily testable.
 
@@ -12,14 +12,14 @@ Complex objects are registered as interfaces and configurations are registered a
 
 The App [App.cs](https://github.com/Briscooe/Swift/App.cs) class contains an IDeliveryService interface. Currently the class does nothing more than stop and start the IDeliveryService. However, the class is easily extendable as any number of services could be injected into the App, for example an ICustomerService or IPaymentService.
 
-The IDeliveryService interface is implemented by the [DeliveryService](https://github.com/Briscooe/Swift/DeliveryService.cs) class. This class takes an IRequestSender and IJourneyCalculator as constructor parameters. The class only contains two public methods, [code]Start()[/code] and [code]Stop()[/code]. By wrapping all operations inside these methods, any number of operations can be added to the service, such as the[code]AssignDrones()[/code]method, and any external caller need not know the difference. 
+The IDeliveryService interface is implemented by the [DeliveryService](https://github.com/Briscooe/Swift/DeliveryService.cs) class. This class takes an IRequestSender and IJourneyCalculator as constructor parameters. The class only contains two public methods, ```Start()``` and ```Stop()```. By wrapping all operations inside these methods, any number of operations can be added to the service, such as the```AssignDrones()```method, and any external caller need not know the difference. 
 
 The IRequestSender interface is implemented by the [RequestSender](https://github.com/Briscooe/Swift/RequestSender.cs) class. This class takes an API base URL and contains one method, "GetObjects<T>". By using generics, this class can be used to return a list of any object type from any API that returns JSON. It could of course be extended to support different data types. In this service it is used to return a list of Drone objects from the "drones" endpoint and a list of Packages from the "packages" endpoint.
 
 The [JourneyCalculator](https://github.com/Briscooe/Swift/JourneyCalculator.cs) implements the IJourneyCalculator, required by the DeliveryService. The JourneyCalculator performs all calculations regarding the time taken to get from one coordinate to the other. It is the only part of the system that knows about the speed of the drone and the location of the depot, both of which are passed into the constructor. 
 
 ## Algorithm
-The [code]AssignDrones()[/code] method starts by retrieving the list of packages then the list of drones, each sorted using LINQ.
+The ```AssignDrones()``` method starts by retrieving the list of packages then the list of drones, each sorted using LINQ.
 
 The packages are ordered by which need to leave the depot soonest (deadline minus time to deliver package). It is important that this is the sort order, rather than simply by deadline, as it considers the fact that while some packages have later deadlines than others, they may take longer to get to and as a result must be handled first.
 
@@ -36,4 +36,4 @@ The core logic of the solution would still run fine with thousands of requests p
 
 The service would run in a continuous loop. After an interval has expired, e.g. 1 second, the main pipeline, as seen in the current solution, would run on a new thread, which would then be correctly disposed of after. It is important to configure a maximum number of threads in a situtation like this. 
 
-To make it even more scalable, the service could be deployed in multiple instances or across multiple servers. Each service/server would communicate with a global cache, e.g. Redis, which would hold a master list of package and drone assignments. When the drones and packages are retrieved, logic would be added to specifically ignore any package or drone currently assigned in this cache. This way none of the assignments would be conflicting
+To make it even more scalable, the service could be deployed in multiple instances or across multiple servers. Each service/server would communicate with a global cache, e.g. Redis, which would hold a master list of package and drone assignments. When the drones and packages are retrieved, logic would be added to specifically ignore any package or drone currently assigned in this cache. This way, none of the assignments would be conflicting.
