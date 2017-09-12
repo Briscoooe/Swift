@@ -17,9 +17,19 @@ namespace Swift
             _journeyCalculator = journeyCalculator;
         }
 
-        public void AssignDrones()
+        public void Start()
         {
-            // Retrieve the packages, sorted by total time remaining (deadline minus time to deliver)
+            AssignDrones();
+        }
+
+        public void Stop()
+        {
+            
+        }
+
+        private void AssignDrones()
+        {
+            // Retrieve the packages, sorted by which must leave soonest
             var packages = _requestSender.GetObjects<Package>("packages").Result
                 .OrderBy(p => p.Deadline - _journeyCalculator.CalculateTimeFromDepot(p.Destination));
 
@@ -43,7 +53,7 @@ namespace Swift
                     // As the drones are sorted by the quickest return journey to the depot
                     // If the first one in the sorted list cannot make the delivery on time, none of them can
                     // Thus its added to the "unassigned" list
-                    if(package.Deadline - totalTime  > now)
+                    if(package.Deadline - totalTime > now)
                     {   
                         unassigned.Add(package.Id);
                     }

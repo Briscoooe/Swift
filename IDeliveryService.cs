@@ -1,7 +1,8 @@
 namespace Swift 
 {
-    public interface IDeliveryService 
+    public interface IDeliveryService
     {
-        void AssignDrones();
+        void Start();
+        void Stop();
     }
 }

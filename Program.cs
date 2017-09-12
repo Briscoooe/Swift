@@ -24,6 +24,7 @@ namespace Swift
 
         private static void ConfigureServices(IServiceCollection serviceCollection)
         {
+            // Registering all dependencies at startup
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", false)

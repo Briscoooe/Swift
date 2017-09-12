@@ -6,5 +6,6 @@ namespace Swift
     {
         public string ApiUrl { get; set;}
         public Coordinate DepotLocation { get; set;}
+        public int DroneSpeed { get; set; }
     }
 }

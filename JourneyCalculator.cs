@@ -3,19 +3,15 @@ using Microsoft.Extensions.Options;
 
 namespace Swift
 {
-    public interface IJourneyCalculator 
-    {
-        double CalculateTimeFromDepot(Coordinate position);
-        double CalculateTimeToCompleteDelivery(Coordinate position1, Coordinate position2);
-    }
     public class JourneyCalculator : IJourneyCalculator
     {
         private readonly Coordinate _depotLocation;
-        private const int _droneSpeed = 50;
+        private readonly int _droneSpeed;
         
         public JourneyCalculator(IOptions<AppSettings> config)
         {
             _depotLocation = config.Value.DepotLocation;
+            _droneSpeed = config.Value.DroneSpeed;
         }
 
         public double CalculateTimeFromDepot(Coordinate position)
@@ -25,7 +21,7 @@ namespace Swift
 
         public double CalculateTimeToCompleteDelivery(Coordinate position1, Coordinate position2)
         {
-            var timeToDestination = CalculateTimeBetweenPoints( position1, position2);
+            var timeToDestination = CalculateTimeBetweenPoints(position1, position2);
             var timeToDepot = CalculateTimeFromDepot(position2);
 
             return timeToDestination + timeToDepot;
